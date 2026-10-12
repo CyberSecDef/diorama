@@ -23,12 +23,20 @@
     </div>
     <div class="center">
       <span id="focus-title" class="only-focused"></span>
+      <div class="menu-wrap only-world" id="room-wrap" hidden>
+        <button id="btn-room" class="pill" title="Go to another room"><span class="pin">◉</span> <span id="room-name"></span> ▾</button>
+        <div class="menu" id="room-menu"></div>
+      </div>
     </div>
     <div class="right">
       <button id="btn-fit" class="icon only-focused" title="Resize window to fill the view">⤢</button>
       <button id="btn-close" class="icon only-focused danger" title="Close window">✕</button>
       <span id="identity"></span>
       <span id="clock"></span>
+      <div class="menu-wrap">
+        <button id="btn-theme" class="icon" title="Switch world">◐</button>
+        <div class="menu right" id="theme-menu"></div>
+      </div>
       <button id="btn-fullscreen" class="icon" title="Full screen (also captures shortcuts like Ctrl+W for apps)">⛶</button>
       <button id="btn-logout" class="icon" title="Log out">⏻</button>
     </div>
@@ -43,6 +51,8 @@
     </div>
   </div>
 
+  <div id="tooltip"></div>
+  <div id="walk-hint" hidden><kbd>↑</kbd><kbd>↓</kbd> walk · <kbd>←</kbd><kbd>→</kbd> turn · <kbd>Shift</kbd> strafe / run · drag to look · click things to use them</div>
   <div id="toasts"></div>
   <div id="offline">Reconnecting…</div>
 

@@ -1,3 +1,5 @@
+[hidden] { display: none !important; }
+
 :root {
   --bg: #05060d;
   --fg: #e3e8ff;
@@ -274,3 +276,85 @@ body.focused #identity { display: none; }
   display: none;
 }
 body.offline #offline { display: block; }
+
+/* ── Menus (theme picker, rooms) ─────────────────────────────────────── */
+
+.menu-wrap { position: relative; display: flex; }
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 200px;
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+  z-index: 25;
+}
+.menu.right { left: auto; right: 0; transform: none; }
+.menu.open { display: flex; }
+.menu button { justify-content: flex-start !important; width: 100%; height: 32px !important; padding: 0 12px !important; white-space: nowrap; }
+.menu button.current { color: var(--accent); }
+.menu button.current::after { content: '●'; margin-left: auto; font-size: 9px; }
+.menu .menu-label { padding: 6px 12px 2px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+#btn-room { background: var(--panel); backdrop-filter: blur(14px); }
+#btn-room .pin { color: var(--accent); font-size: 10px; }
+body.focused .only-world { display: none !important; }
+
+#tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 35;
+  padding: 7px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: calc(var(--radius) - 2px);
+  backdrop-filter: blur(14px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 100ms;
+  white-space: nowrap;
+}
+#tooltip.visible { opacity: 1; }
+#tooltip b { font-weight: 600; }
+#tooltip span { font-size: 12px; color: var(--muted); }
+#tooltip.missing span { color: #ff8f8f; }
+
+#walk-hint {
+  position: fixed;
+  left: 16px;
+  bottom: 18px;
+  z-index: 15;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(14px);
+  transition: opacity 600ms;
+}
+#walk-hint.faded { opacity: 0.25; }
+body.focused #walk-hint { display: none; }
+kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 4px;
+  margin: 0 1px;
+  text-align: center;
+  font: 11px ui-monospace, monospace;
+  color: var(--fg);
+  border: 1px solid var(--panel-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}

@@ -7,10 +7,13 @@ import { Hud } from './hud';
 import { Net } from './net';
 import { NativeSurface, NativeWin, TerminalWin, type Win } from './windows';
 import { World } from './world';
+import { BUILTIN_THEMES } from './theme';
 
 const world = new World(document.getElementById('world') as HTMLCanvasElement);
 const net = new Net(() => ({ t: 'hello', viewport: FocusOverlay.available() }));
 const overlay = new FocusOverlay(m => net.send(m));
+// Handy in the devtools console when writing themes.
+(window as any).diorama = { world };
 
 const wins = new Map<string, Win>();
 /** Every X surface id -> the top-level window it belongs to (and its own surface). */
@@ -20,13 +23,22 @@ let focusToken = 0;
 /** Windows that show up shortly after we asked for them get focused automatically. */
 let expectWindowUntil = 0;
 let expectTerminal = false;
+/** Screen slot the next expected window should land on (set when a prop launched it). */
+let expectSlot: string | undefined;
+/** prop label -> window it opened, so clicking the prop again focuses instead of relaunching */
+let expectProp: string | undefined;
+const propWindows = new Map<string, string>();
 
 const hud = new Hud({
   launch(app) {
     expectWindowUntil = performance.now() + 15_000;
+    expectSlot = expectProp = undefined;
     net.send({ t: 'launch', app });
   },
-  openTerminal,
+  openTerminal: () => openTerminal(),
+  switchTheme: name => void switchTheme(name),
+  goToRoom: id => void world.goToRoom(id),
+  launcherToggled: open => { world.blocked = open; },
   focus: key => void focus(key),
   back: () => void back(),
   close(key) {
@@ -44,8 +56,10 @@ const hud = new Hud({
   notifyDismiss: id => net.send({ t: 'notify-dismiss', id }),
 });
 
-function openTerminal() {
+function openTerminal(slot?: string, prop?: string) {
   expectTerminal = true;
+  expectSlot = slot;
+  expectProp = prop;
   const a = FocusOverlay.available();
   net.send({ t: 'term-open', cols: Math.floor(Math.min(a.w, 1400) / 9), rows: Math.floor(Math.min(a.h, 900) / 20) });
 }
@@ -81,6 +95,38 @@ async function back() {
 overlay.onBackdrop = () => void back();
 world.onPick = key => void focus(key);
 
+// Clicking a prop: focus the window it opened earlier, else launch its app.
+world.onProp = (spec, app) => {
+  const open = propWindows.get(spec.label);
+  if (open && wins.has(open)) return void focus(open);
+  if (!app) return hud.error(`${spec.label}: no matching application is installed.`);
+  if (app.id === '__terminal') return openTerminal(spec.slot, spec.label);
+  expectWindowUntil = performance.now() + 15_000;
+  expectSlot = spec.slot;
+  expectProp = spec.label;
+  net.send({ t: 'launch', app: app.id });
+};
+
+async function switchTheme(name: string) {
+  if (name === world.themeName) return;
+  await back();
+  await world.useTheme(name);
+  for (const w of wins.values()) if (w instanceof TerminalWin) w.setTheme(world.theme.terminal ?? {});
+  localStorage.setItem('diorama.theme', name);
+  await refreshThemeMenu();
+}
+
+async function refreshThemeMenu() {
+  const user: string[] = await fetch('/api/themes').then(r => (r.ok ? r.json() : [])).catch(() => []);
+  hud.setThemes(BUILTIN_THEMES, user, world.themeName);
+  hud.setRooms(world.rooms());
+}
+
+setInterval(() => {
+  const id = world.currentRoom();
+  hud.setRoom(id, world.rooms().find(r => r.id === id)?.name ?? 'Between rooms');
+}, 300);
+
 function refreshTasks() {
   hud.renderTasks([...wins.values()].sort((a, b) => a.createdAt - b.createdAt));
 }
@@ -101,10 +147,13 @@ function onSurface(s: SurfaceInfo) {
     const win = new NativeWin(s);
     surfaces.set(s.id, { win, surface: win.surface });
     wins.set(win.key, win);
-    world.add(win);
+    const expected = performance.now() < expectWindowUntil;
+    world.add(win, expected ? expectSlot : undefined);
     refreshTasks();
-    if (performance.now() < expectWindowUntil) {
+    if (expected) {
       expectWindowUntil = 0;
+      if (expectProp) propWindows.set(expectProp, win.key);
+      expectSlot = expectProp = undefined;
       void focus(win.key);
     }
     return;
@@ -157,10 +206,12 @@ function addTerminal(id: number, title: string, backlog?: string) {
     if (focusedKey === t.key) hud.setFocused(t);
   };
   wins.set(t.key, t);
-  world.add(t);
+  world.add(t, expectTerminal ? expectSlot : undefined);
   refreshTasks();
   if (expectTerminal) {
     expectTerminal = false;
+    if (expectProp) propWindows.set(expectProp, t.key);
+    expectSlot = expectProp = undefined;
     void focus(t.key);
   }
 }
@@ -217,9 +268,13 @@ addEventListener('keydown', ev => {
 
 (async () => {
   // ?theme=name overrides the server's configured theme (handy for trying one out).
-  const theme = new URLSearchParams(location.search).get('theme') ?? document.documentElement.dataset.theme ?? 'orbit';
+  const theme = new URLSearchParams(location.search).get('theme')
+    ?? localStorage.getItem('diorama.theme')
+    ?? document.documentElement.dataset.theme ?? 'orbit';
+  await hud.loadApps();
+  world.setApps(hud.appList);
   await world.useTheme(theme);
   for (const w of wins.values()) if (w instanceof TerminalWin) w.setTheme(world.theme.terminal ?? {});
-  await hud.loadApps();
+  await refreshThemeMenu();
   net.connect();
 })();

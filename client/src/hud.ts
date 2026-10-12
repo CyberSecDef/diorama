@@ -8,6 +8,9 @@ function esc(s: string) {
 }
 
 export interface HudActions {
+  switchTheme(name: string): void;
+  goToRoom(id: string): void;
+  launcherToggled(open: boolean): void;
   launch(appId: string): void;
   openTerminal(): void;
   focus(key: string): void;
@@ -43,6 +46,11 @@ export class Hud {
       else if (ev.key === 'Enter') { this.activate(this.filtered[this.selected]); ev.preventDefault(); }
     };
     $('#launcher').addEventListener('pointerdown', ev => { if (ev.target === $('#launcher')) this.toggleLauncher(false); });
+    $('#btn-theme').onclick = ev => { ev.stopPropagation(); this.openMenu('#theme-menu'); };
+    $('#btn-room').onclick = ev => { ev.stopPropagation(); this.openMenu('#room-menu'); };
+    document.addEventListener('pointerdown', ev => {
+      if (!(ev.target as HTMLElement).closest('.menu-wrap')) this.closeMenus();
+    });
     setInterval(() => this.tickClock(), 1000);
     this.tickClock();
     document.addEventListener('fullscreenchange', () => {
@@ -56,6 +64,10 @@ export class Hud {
   async loadApps() {
     const res = await fetch('/api/apps');
     if (res.ok) this.apps = await res.json();
+  }
+
+  get appList() {
+    return this.apps;
   }
 
   setIdentity(user: string, host: string) {
@@ -99,6 +111,7 @@ export class Hud {
 
   toggleLauncher(open = !this.launcherOpen, initial = '') {
     this.launcherOpen = open;
+    this.act.launcherToggled(open);
     $('#launcher').classList.toggle('visible', open);
     const search = $<HTMLInputElement>('#launcher-search');
     if (open) {
@@ -154,6 +167,58 @@ export class Hud {
       return b;
     }));
     grid.querySelector('.selected')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  // ── World menus ─────────────────────────────────────────────────────────
+
+  private openMenu(sel: string) {
+    const m = $(sel);
+    const wasOpen = m.classList.contains('open');
+    this.closeMenus();
+    if (!wasOpen) m.classList.add('open');
+  }
+
+  closeMenus() {
+    document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
+  }
+
+  setThemes(builtin: { id: string; label: string; walk?: boolean }[], user: string[], current: string) {
+    const menu = $('#theme-menu');
+    const item = (id: string, label: string) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.classList.toggle('current', id === current);
+      b.onclick = () => { this.closeMenus(); if (id !== current) this.act.switchTheme(id); };
+      return b;
+    };
+    const label = (t: string) => { const d = document.createElement('div'); d.className = 'menu-label'; d.textContent = t; return d; };
+    menu.replaceChildren(
+      label('Showcase'), ...builtin.filter(t => !t.walk).map(t => item(t.id, t.label)),
+      label('Walk around'), ...builtin.filter(t => t.walk).map(t => item(t.id, t.label)),
+      ...(user.length ? [label('Your themes'), ...user.map(u => item(u, u))] : []),
+    );
+  }
+
+  setRooms(all: { id: string; name: string; hidden?: boolean }[]) {
+    const rooms = all.filter(r => !r.hidden);
+    $('#room-wrap').hidden = rooms.length === 0;
+    $('#walk-hint').hidden = rooms.length === 0;
+    $('#walk-hint').classList.remove('faded');
+    clearTimeout(this.hintTimer);
+    this.hintTimer = setTimeout(() => $('#walk-hint').classList.add('faded'), 12_000);
+    $('#room-menu').replaceChildren(...rooms.map(r => {
+      const b = document.createElement('button');
+      b.textContent = r.name;
+      b.dataset.id = r.id;
+      b.onclick = () => { this.closeMenus(); this.act.goToRoom(r.id); };
+      return b;
+    }));
+  }
+  private hintTimer?: ReturnType<typeof setTimeout>;
+
+  setRoom(id: string | null, name: string) {
+    $('#room-name').textContent = name;
+    document.querySelectorAll<HTMLElement>('#room-menu button').forEach(b => b.classList.toggle('current', b.dataset.id === id));
   }
 
   // ── Toasts ──────────────────────────────────────────────────────────────

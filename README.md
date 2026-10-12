@@ -21,6 +21,10 @@ Ctrl+W reach your apps instead of the browser.
 | start typing in the world | app search; Enter launches |
 | click the dimmed backdrop | back to the world |
 | ⤢ / ✕ in the top bar | resize the native window to fill the view / close it |
+| ◐ in the top bar | switch worlds (remembered per browser) |
+| `↑` `↓` / `←` `→` | walk / turn in walkable worlds (`Shift`: run / strafe), drag to look, wheel to step |
+| click an object in a room | open its app (calendar, calculator, notepad...), or focus it if already open |
+| ◉ room name in the top bar | where you are; click to travel to another room |
 
 ## How it works
 
@@ -45,8 +49,23 @@ server (node)
 
 ## Themes
 
-Built-in: `orbit` (default) and `workshop`. Pick one with `--theme`, `"theme"` in
-`~/.config/diorama/config.json`, or try one live with `?theme=workshop`.
+| Theme | Kind | What it is |
+|---|---|---|
+| `orbit` (default) | showcase | glass panels on an arc under a night sky |
+| `workshop` | showcase | monitors on desks in a room at dusk |
+| `starship` | walkable | bridge, engineering (reactor), science lab, medical bay, crew quarters, observation lounge; windows onto Orbit's space |
+| `house` | walkable | two storeys with stairs: living room, kitchen, office, library, bedroom, hobby studio, bathroom |
+| `tower` | walkable | corporate HQ above a city at dusk: lobby, open office with cubicles, conference, server room, records, mail, break room; atrium stairs up to the executive suite, boardroom and sky lounge |
+
+Switch with the ◐ menu, `?theme=house`, `--theme`, or `"theme"` in
+`~/.config/diorama/config.json`.
+
+In walkable worlds, windows hang on wall screens and desk monitors. A new window
+goes to a free screen in the room you are in, or to the screen next to the
+object that launched it; with every screen taken, a free-standing one appears in
+front of you. Objects on walls and furniture are app launchers: they resolve by
+desktop id then freedesktop category, so they work across distros, and say
+"not installed" otherwise.
 
 A theme is an ES module whose default export is `(ctx) => Theme`. See
 `client/src/theme.ts` for the full contract. Put user themes in
@@ -77,7 +96,25 @@ export default function myTheme({ THREE, scene }) {
 
 A theme controls the world, which object hosts each window, layout, per-frame
 animation and entities, the chrome's CSS variables, terminal colours, and the
-focus camera pose, duration, and easing.
+focus camera pose, duration, and easing. Themes may supply a `navigator` (the
+built-in walker) and register clickable objects with `ctx.addProp(obj, { label, app, slot })`.
+
+The walkable themes are built with the kit in `client/src/themes/kit/`:
+
+```ts
+const kit = createKit(ctx, 'scifi');               // or 'home' | 'office'
+kit.b.room({ id: 'lab', name: 'Lab', x0: 0, z0: 0, x1: 8, z1: 6 });
+kit.b.room({ id: 'hall', name: 'Hall', x0: 8, z0: 0, x1: 11, z1: 6, hidden: true });
+kit.b.door('lab', 'hall', 3, { sign: true });       // cut through both walls
+kit.b.window('lab', 'n', 4, 3);                     // glass, blocks walking
+kit.b.build();
+kit.b.screen('lab-1', 'lab', 'w', 3, 1.8, 1.6, 1.0); // a wall display windows can land on
+kit.wallApp(kit.P.calendar(), 'lab', 'n', 1.5, 1.6, 'Calendar', APPS.calendar, 'lab-1');
+kit.b.stairs({ x0, z0, x1, z1, y0: 0, y1: 3.1, axis: 'z', up: -1 }); // walkable
+// theme: { setup, createHost: kit.createHost, frame: kit.frame, navigator: kit.walker }
+```
+
+`window.diorama.world` is exposed in the browser console for poking at a theme.
 
 ## Config (`~/.config/diorama/config.json`)
 

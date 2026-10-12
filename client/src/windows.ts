@@ -41,6 +41,8 @@ function makeTexture(canvas: HTMLCanvasElement) {
   t.magFilter = THREE.LinearFilter;
   t.anisotropy = 8;
   t.generateMipmaps = true;
+  // Owned by the window, not the theme: survives theme teardown.
+  t.userData.dioramaWindow = true;
   return t;
 }
 
