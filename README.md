@@ -2,7 +2,70 @@
 
 Your desktop as a themeable 3D world in a full-screen browser. Every window lives
 on an object in the scene; focusing one flies the camera in and swaps the 3D
-screen for a pixel-exact, fully interactive 2D view.
+screen for a pixel-exact, fully interactive 2D view. Some worlds you can walk
+around in: a starship, a house, an office tower, where wall calendars, clocks,
+calculators and filing cabinets are the app launchers.
+
+![Starship bridge with apps on the wall screens](docs/screenshots/10-starship-bridge.jpg)
+
+<table>
+<tr>
+<td><img src="docs/screenshots/01-orbit.jpg" alt="Orbit: windows floating on an arc"></td>
+<td><img src="docs/screenshots/02-focused-native-app.jpg" alt="A focused native app at 1:1 pixels"></td>
+</tr>
+<tr>
+<td align="center"><b>Orbit</b>: real Linux apps on glass panels</td>
+<td align="center">Click one: the camera flies in and it becomes a live 1:1 window</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/11-starship-engineering.jpg" alt="Starship engineering with reactor"></td>
+<td><img src="docs/screenshots/13-starship-lounge.jpg" alt="Starship observation lounge"></td>
+</tr>
+<tr>
+<td align="center"><b>Starship</b>: engineering</td>
+<td align="center">Observation lounge</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/20-house-hall.jpg" alt="House entry hall stairs"></td>
+<td><img src="docs/screenshots/22-house-office.jpg" alt="House home office"></td>
+</tr>
+<tr>
+<td align="center"><b>House</b>: walk upstairs</td>
+<td align="center">Home office: the calculator on the wall opens Calculator</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/30-tower-lobby.jpg" alt="Corporate HQ lobby"></td>
+<td><img src="docs/screenshots/33-tower-boardroom.jpg" alt="Corporate HQ boardroom"></td>
+</tr>
+<tr>
+<td align="center"><b>Corporate HQ</b>: lobby</td>
+<td align="center">Boardroom above the city</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/03-launcher.jpg" alt="App launcher"></td>
+<td><img src="docs/screenshots/40-workshop.jpg" alt="Workshop theme"></td>
+</tr>
+<tr>
+<td align="center">Start typing anywhere to launch an app</td>
+<td align="center"><b>Workshop</b></td>
+</tr>
+</table>
+
+<details>
+<summary>More screenshots</summary>
+
+| | |
+|---|---|
+| ![Crew quarters](docs/screenshots/12-starship-quarters.jpg) | ![Living room with prop tooltip](docs/screenshots/21-house-living.jpg) |
+| Starship crew quarters | Hover an object to see what it opens |
+| ![Kitchen](docs/screenshots/23-house-kitchen.jpg) | ![Open office](docs/screenshots/31-tower-open-office.jpg) |
+| House kitchen | Open office: every cubicle monitor can host a window |
+| ![Server room](docs/screenshots/32-tower-server-room.jpg) | |
+| Server room: racks open the system monitor, VMs, logs | |
+
+</details>
+
+## Quick start
 
 ```
 npm install && npm run build

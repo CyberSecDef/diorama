@@ -96,10 +96,11 @@ async function main() {
   console.log(`diorama is up (X display ${provider.env().DISPLAY})`);
   for (const a of addrs) console.log(`  ${scheme}://${a}:${cfg.port}/`);
 
+  // Every step guarded: one failure must not leave Xvfb or dbus orphaned.
   const shutdown = () => {
-    terms.killAll();
-    notes.stop();
-    provider.stop();
+    for (const step of [() => terms.killAll(), () => notes.stop(), () => provider.stop()]) {
+      try { step(); } catch (err) { console.error('[diorama] shutdown:', (err as Error).message); }
+    }
     process.exit(0);
   };
   process.on('SIGINT', shutdown);

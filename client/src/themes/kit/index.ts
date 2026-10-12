@@ -67,7 +67,13 @@ export function createKit(ctx: ThemeContext, styleName: Style['name']) {
 
   function pickSlot(hint: HostHint): Slot {
     const free = [...b.slots.values()].filter(s => !s.occupant && !s.floating);
-    const dist = (s: Slot) => s.pos.distanceTo(hint.player);
+    // Distance, with screens behind you counting as further away: a new
+    // window should appear where you are looking.
+    const dist = (s: Slot) => {
+      const to = s.pos.clone().sub(hint.player);
+      const behind = to.x * hint.facing.x + to.z * hint.facing.z < 0;
+      return to.length() + (behind ? 8 : 0);
+    };
     if (hint.slot) {
       const s = b.slots.get(hint.slot);
       if (s && !s.occupant) return s;
@@ -75,7 +81,7 @@ export function createKit(ctx: ThemeContext, styleName: Style['name']) {
     const room = b.roomAt(hint.player.x, hint.player.z, hint.player.y - 1.62)?.id;
     const inRoom = free.filter(s => s.room === room).sort((p, q) => dist(p) - dist(q));
     if (inRoom.length) return inRoom[0];
-    const near = free.filter(s => dist(s) < 14 && Math.abs(s.pos.y - hint.player.y) < 2).sort((p, q) => dist(p) - dist(q));
+    const near = free.filter(s => s.pos.distanceTo(hint.player) < 14 && Math.abs(s.pos.y - hint.player.y) < 2).sort((p, q) => dist(p) - dist(q));
     if (near.length) return near[0];
     return floatingSlot(hint);
   }

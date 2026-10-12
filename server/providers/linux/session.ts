@@ -47,6 +47,8 @@ export class XSession {
       stdio: ['ignore', 'pipe', process.env.DIORAMA_DEBUG ? 'inherit' : 'ignore'],
       env: this.env(),
     });
+    // Last-resort cleanup if we exit by any path that skips stop().
+    process.once('exit', () => this.stop());
     this.dbusAddress = await new Promise<string>((resolve, reject) => {
       const rl = createInterface({ input: this.dbus!.stdout! });
       rl.once('line', line => resolve(line.trim()));
@@ -75,9 +77,12 @@ export class XSession {
   }
 
   stop() {
-    this.dbus?.kill();
-    this.xvfb?.kill();
+    for (const p of [this.dbus, this.xvfb]) {
+      try { if (p && p.exitCode === null) p.kill(); } catch { /* already gone */ }
+    }
+    this.dbus = this.xvfb = undefined;
     if (this.dir) rmSync(this.dir, { recursive: true, force: true });
+    this.dir = '';
   }
 }
 
