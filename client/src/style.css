@@ -1,0 +1,276 @@
+:root {
+  --bg: #05060d;
+  --fg: #e3e8ff;
+  --muted: #8b93b8;
+  --accent: #7aa2ff;
+  --accent-2: #c77dff;
+  --panel: rgba(14, 17, 38, 0.72);
+  --panel-border: rgba(122, 162, 255, 0.22);
+  --backdrop: rgba(3, 4, 12, 0.55);
+  --font: "Inter", "Segoe UI", system-ui, sans-serif;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.4 var(--font);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+#world {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  touch-action: none;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+
+#topbar {
+  position: fixed;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  height: 38px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  z-index: 20;
+  pointer-events: none;
+}
+#topbar > div { display: flex; align-items: center; gap: 6px; pointer-events: auto; }
+#topbar .right { justify-content: flex-end; }
+#topbar .left, #topbar .right {
+  width: fit-content;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(14px);
+}
+#topbar .right { justify-self: end; }
+#topbar button { height: 28px; padding: 0 10px; border-radius: calc(var(--radius) - 4px); display: flex; align-items: center; gap: 8px; }
+#topbar button:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+#topbar button.icon { width: 30px; padding: 0; justify-content: center; font-family: ui-monospace, monospace; }
+#topbar button.danger:hover { background: rgba(255, 90, 90, 0.25); }
+#topbar .brand { font-weight: 600; letter-spacing: 0.02em; }
+#topbar .brand svg { color: var(--accent); }
+#topbar .pill { border: 1px solid var(--panel-border); }
+#identity, #clock { color: var(--muted); padding: 0 8px; font-variant-numeric: tabular-nums; }
+#focus-title {
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 16px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(14px);
+  font-weight: 500;
+}
+#focus-title:empty { display: none; }
+
+body:not(.focused) .only-focused { display: none !important; }
+body.focused #identity { display: none; }
+
+/* ── Focus overlay ───────────────────────────────────────────────────── */
+
+#focus {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--backdrop);
+  backdrop-filter: blur(6px) saturate(0.8);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease-out;
+}
+#focus.visible { opacity: 1; pointer-events: auto; }
+#focus .stage {
+  position: absolute;
+  transform-origin: 0 0;
+  box-shadow: 0 0 0 1px var(--panel-border), 0 30px 80px rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+}
+#focus .stage canvas.surface { position: absolute; display: block; image-rendering: auto; }
+#focus[data-kind="terminal"] .stage {
+  background: var(--term-bg, #0b0d1c);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+}
+.terminal-host { width: 100%; height: 100%; }
+#term-holder { position: fixed; left: -10000px; top: 0; width: 1200px; height: 800px; visibility: hidden; }
+#term-holder .terminal-host { width: 1200px; height: 800px; }
+
+/* ── Taskbar ─────────────────────────────────────────────────────────── */
+
+#taskbar {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  max-width: calc(100vw - 40px);
+  overflow-x: auto;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: calc(var(--radius) + 4px);
+  backdrop-filter: blur(14px);
+  z-index: 20;
+  transition: opacity 200ms, transform 200ms;
+}
+#taskbar.empty, body.focused #taskbar { opacity: 0; pointer-events: none; transform: translate(-50%, 20px); }
+.task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  max-width: 220px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--radius);
+}
+.task:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.task img { width: 22px; height: 22px; }
+.task .glyph { width: 22px; text-align: center; color: var(--accent); font-family: ui-monospace, monospace; font-size: 12px; }
+.task .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Launcher ────────────────────────────────────────────────────────── */
+
+#launcher {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: start center;
+  padding-top: 12vh;
+  background: var(--backdrop);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+#launcher.visible { opacity: 1; pointer-events: auto; }
+.launcher-panel {
+  width: min(760px, 92vw);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: calc(var(--radius) + 6px);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  transform: translateY(-8px) scale(0.98);
+  transition: transform 160ms ease-out;
+}
+#launcher.visible .launcher-panel { transform: none; }
+#launcher-search {
+  margin: 14px;
+  padding: 12px 16px;
+  font: 500 18px var(--font);
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  outline: none;
+}
+#launcher-search:focus { border-color: var(--accent); }
+#launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 4px;
+  padding: 0 14px 14px;
+  overflow-y: auto;
+}
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 6px 10px;
+  border-radius: var(--radius);
+  text-align: center;
+  font-size: 12.5px;
+}
+.app span:last-child { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.app img, .app .glyph { width: 48px; height: 48px; }
+.app .glyph {
+  display: grid;
+  place-items: center;
+  font: 600 18px ui-monospace, monospace;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: 12px;
+}
+.app:hover { background: rgba(255, 255, 255, 0.06); }
+.app.selected { background: color-mix(in srgb, var(--accent) 22%, transparent); outline: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); }
+
+/* ── Toasts ──────────────────────────────────────────────────────────── */
+
+#toasts {
+  position: fixed;
+  top: 60px;
+  right: 14px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 40;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  animation: toast-in 220ms ease-out;
+}
+.toast.urgency-2 { border-left-color: #ff6b6b; }
+.toast.error { border-left-color: #ff6b6b; color: #ffd0d0; }
+.toast.leaving { opacity: 0; transform: translateX(20px); transition: all 220ms; }
+.toast-head { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }
+.toast-head .x { font-size: 16px; line-height: 1; padding: 0 4px; color: var(--muted); }
+.toast-summary { font-weight: 600; margin-top: 2px; }
+.toast-body { color: color-mix(in srgb, var(--fg) 80%, transparent); margin-top: 4px; user-select: text; }
+.toast-actions { display: flex; gap: 6px; margin-top: 10px; }
+.toast-actions button { padding: 4px 10px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 20%, transparent); }
+@keyframes toast-in { from { opacity: 0; transform: translateX(24px); } }
+
+#offline {
+  position: fixed;
+  left: 50%;
+  top: 60px;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 107, 107, 0.2);
+  border: 1px solid rgba(255, 107, 107, 0.5);
+  z-index: 50;
+  display: none;
+}
+body.offline #offline { display: block; }

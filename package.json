@@ -1,0 +1,51 @@
+{
+  "name": "diorama",
+  "version": "0.1.0",
+  "description": "Your desktop as a themeable 3D world, served to a full-screen browser.",
+  "scripts": {
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build:client": "vite build",
+    "dev": "vite build --watch & tsx watch server/cli.ts start",
+    "start": "node dist/server/cli.js start",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit"
+  },
+  "keywords": [
+    "desktop",
+    "3d",
+    "three.js",
+    "x11",
+    "remote-desktop",
+    "shell"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dbus-next": "^0.10.2",
+    "node-pty": "^1.1.0",
+    "selfsigned": "^5.5.0",
+    "sharp": "^0.35.5",
+    "ws": "^8.22.0",
+    "x11": "^4.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/three": "^0.186.0",
+    "@types/ws": "^8.18.2",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "three": "^0.186.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  },
+  "type": "module",
+  "bin": {
+    "diorama": "dist/server/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>diorama — sign in</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body {
+      display: grid; place-items: center;
+      font: 15px/1.4 "Inter", "Segoe UI", system-ui, sans-serif; color: #e3e8ff;
+      background: radial-gradient(ellipse at 50% 120%, #2a1d5c 0%, #0b0c1f 45%, #04050b 100%);
+    }
+    form {
+      width: min(340px, 88vw); padding: 32px 28px 26px;
+      background: rgba(14, 17, 38, 0.72); border: 1px solid rgba(122, 162, 255, 0.22);
+      border-radius: 18px; backdrop-filter: blur(16px); box-shadow: 0 30px 90px rgba(0,0,0,.6);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    h1 { margin: 0 0 6px; font-size: 22px; font-weight: 600; display: flex; gap: 10px; align-items: center; }
+    h1 svg { color: #7aa2ff; }
+    input {
+      font: inherit; color: inherit; padding: 12px 14px; border-radius: 10px; outline: none;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(122,162,255,.25);
+    }
+    input:focus { border-color: #7aa2ff; }
+    button {
+      font: inherit; font-weight: 600; padding: 11px; border: 0; border-radius: 10px; cursor: pointer;
+      color: #0b0c1f; background: linear-gradient(135deg, #7aa2ff, #c77dff);
+    }
+    button:disabled { opacity: .6; cursor: default; }
+    #err { min-height: 1.4em; color: #ff8fa8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <form id="f">
+    <h1>
+      <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3 6.5 3.6L12 11.5 5.5 7.9 12 4.3ZM5 9.6l6 3.3v6.6l-6-3.3V9.6Zm8 9.9v-6.6l6-3.3v6.6l-6 3.3Z"/></svg>
+      diorama
+    </h1>
+    <input id="pw" type="password" placeholder="Password" autocomplete="current-password" autofocus required>
+    <button id="go">Enter</button>
+    <div id="err"></div>
+  </form>
+  <script type="module">
+    const f = document.getElementById('f'), err = document.getElementById('err'), go = document.getElementById('go');
+    f.onsubmit = async e => {
+      e.preventDefault();
+      go.disabled = true; err.textContent = '';
+      try {
+        const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: document.getElementById('pw').value }) });
+        if (r.ok) return void (location.href = '/');
+        err.textContent = (await r.json()).error ?? 'Login failed.';
+      } catch { err.textContent = 'Server unreachable.'; }
+      go.disabled = false;
+    };
+  </script>
+</body>
+</html>
